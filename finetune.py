@@ -34,9 +34,10 @@ if __name__ == '__main__':
     image_size  = [450, 450, 3]
     output_dims = 398
     model_path  = 'pre-trained-models/resnet_v1_50.ckpt'
-    train_list  = "list/train.list"
-    val_list    = "list/dev.list"
-    logdir      = "train-logs"
+    train_list  = 'list/train.list'
+    val_list    = 'list/dev.list'
+    logdir      = 'train-logs'
+    train_vars  = ['fc6']
     num_epochs  = 50
     batch_size  = 32
 
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     tf.summary.scalar('obj loss', obj_loss)
 
     lr_rate = 0.001
-    var_list = [v for v in tf.trainable_variables()]
+    var_list = [v for v in tf.trainable_variables() if any(v.name in s for s in train_vars)]
     with tf.name_scope('train'):
         optm = tf.train.MomentumOptimizer(learning_rate=lr_rate, momentum=0.9)
         grads_vars = optm.compute_gradients(loss, var_list)
@@ -70,11 +71,8 @@ if __name__ == '__main__':
     feed_dict = OrderedDict.fromkeys([inputs, truths, training])
     group_op = tf.group(train_op)
 
-    data_family = load_data_sets(image_size[0], output_dims, batch_size, train_list, val_list)
+    data_family = load_data_sets(output_dims, batch_size, train_list, val_list)
 
     # begin training
     train(group_op, loss, feed_dict, data_family, num_epochs, saver, restorer, model_path)
-
-
-
 
