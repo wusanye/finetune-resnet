@@ -29,12 +29,11 @@ DataFamily = collections.namedtuple("DataFamily", ['train', 'val', 'next_batch']
 
 class DataGenerator(object):
 
-    def __init__(self, txt_file, image_size, output_dim, mode, batch_size, shuffle=True,
+    def __init__(self, txt_file, output_dim, mode, batch_size, shuffle=True,
                  buffer_size=10000):
 
         self.txt_file = txt_file
         self.output_dim = output_dim
-        self.image_size = image_size
 
         # retrieve the data from the text file
         self._read_txt_file()
@@ -96,7 +95,7 @@ class DataGenerator(object):
 
         img_normed = self.parse_data(img_file)
 
-        label_normed = self.parse_label(label, self.image_size)
+        label_normed = label
 
         return img_normed, label_normed
 
@@ -104,7 +103,7 @@ class DataGenerator(object):
 
         img_normed = self.parse_data(img_file)
 
-        label_normed = self.parse_label(label, self.image_size)
+        label_normed = label
 
         return img_normed, label_normed
 
@@ -112,29 +111,11 @@ class DataGenerator(object):
     def parse_data(img_file):
         # load and pre-process the image
         img_string = tf.read_file(img_file)
-        img_decoded = tf.image.decode_jpeg(img_string, channels=3)
-        img_resized = tf.image.resize_images(img_decoded, [224, 224])
-        img_normed = tf.divide(tf.cast(img_resized, tf.float32), 255.)
+        img_decoded = tf.image.decode_png(img_string, channels=3)
+        # img_resized = tf.image.resize_images(img_decoded, [224, 224])
+        img_normed = tf.divide(tf.cast(img_decoded, tf.float32), 255.)
 
         return img_normed
-
-    @staticmethod
-    def parse_label(label, image_size):
-        # label pre-process
-        label_con = label_norm(image_size)
-        label_con = convert_to_tensor(label_con, dtype=tf.float32)
-        label_normed = tf.divide(label, label_con)
-
-        return label_normed
-
-
-def label_norm(image_size):
-    f = np.load('bfm09/std_shape_exp.npz')
-    shape_std, exp_std = f['shape_ev'], f['exp_ev']
-    rest_std = np.array([1, 1, 1, image_size, image_size, image_size/224.], dtype=np.float32)
-    label_con = np.concatenate((shape_std, exp_std, rest_std))
-
-    return label_con
 
 
 def read_txt(file_name):
@@ -147,30 +128,6 @@ def read_txt(file_name):
     return num_list
 
 
-def asym_l2_loss(predicts, truth):
-    """Implementation of Asymmetric Euclidean Loss
-    Args:
-        predicts: predicted output, dim (batch, output_len)
-        truth: ground truth
-    Returns:
-        Asymmetric Euclidean Loss over the batch
-    """
-    lambda1 = tf.constant(1/4, dtype=tf.float32)
-    lambda2 = tf.constant(3/4, dtype=tf.float32)
-
-    gamma_plus = tf.abs(truth)
-    gamma_pplus = tf.sign(truth) * predicts
-    gamma_max = tf.maximum(gamma_plus, gamma_pplus)
-
-    # over_estimate = lambda1 * tf.square(tf.norm(gamma_plus - gamma_max, axis=1))
-    # under_estimate = lambda2 * tf.square(tf.norm(gamma_pplus - gamma_max, axis=1))
-
-    over_estimate = lambda1 * tf.reduce_mean(tf.square(gamma_plus - gamma_max), axis=1)
-    under_estimate = lambda2 * tf.reduce_mean(tf.square(gamma_pplus - gamma_max), axis=1)
-
-    return tf.reduce_mean(over_estimate + under_estimate)
-
-
 def l2_loss(predicts, truths):
 
     loss = tf.reduce_mean(tf.square(predicts - truths))
@@ -181,7 +138,7 @@ def l2_loss(predicts, truths):
 def optimize_loss(train_optimizer, lr_rate, predicts, truths, summary=True):
 
     with tf.name_scope("Asymmetric_L2_Loss"):
-        loss = asym_l2_loss(predicts, truths)
+        loss = l2_loss(predicts, truths)
         reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss += tf.add_n(reg_loss)
 
@@ -207,12 +164,12 @@ def optimize_loss(train_optimizer, lr_rate, predicts, truths, summary=True):
     return train_op, update_op, loss
 
 
-def load_data_sets(image_size, output_dim, batch_size, train_list, val_list):
+def load_data_sets(output_dim, batch_size, train_list, val_list):
 
     # Place data loading and pre-processing on cpu
     with tf.device('/cpu:0'):
-        train_data = DataGenerator(train_list, image_size[0], output_dim, 'training', batch_size, shuffle=True)
-        val_data = DataGenerator(val_list, image_size[0], output_dim, 'inference', batch_size, shuffle=False)
+        train_data = DataGenerator(train_list, output_dim, 'training', batch_size, shuffle=True)
+        val_data = DataGenerator(val_list, output_dim, 'inference', batch_size, shuffle=False)
 
     # Create an reinitializable iterator given the data structure
     iterator = Iterator.from_structure(train_data.data.output_types, train_data.data.output_shapes)
@@ -323,8 +280,3 @@ def get_file_list(files_path, save_file):
 
     with open(save_file, 'w') as f:
         f.write('\n'.join(file_list))  # write(a single string) while writelines(list of string)
-
-
-
-
-
