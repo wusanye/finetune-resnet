@@ -29,10 +29,11 @@ DataFamily = collections.namedtuple("DataFamily", ['train', 'val', 'next_batch']
 
 class DataGenerator(object):
 
-    def __init__(self, txt_file, output_dim, mode, batch_size, shuffle=True,
+    def __init__(self, base_dir, txt_file, output_dim, mode, batch_size, shuffle=True,
                  buffer_size=10000):
 
-        self.txt_file = txt_file
+        self.base_dir = base_dir
+        self.txt_file = os.path.join(base_dir, txt_file)
         self.output_dim = output_dim
 
         # retrieve the data from the text file
@@ -76,10 +77,13 @@ class DataGenerator(object):
             lines = f.readlines()
             for line in lines:
                 item = line.strip()  # strip the last '\n'
-                self.img_paths.append(item)
+                item_path = os.path.join(self.base_dir, item)
+                self.img_paths.append(item_path + 'mix.png')
                 # read y data, stored in .txt
-                num_list = read_txt(item[:-3] + "txt")
-                self.labels.append(num_list)
+                param_list = read_txt(item_path + '.shape')
+                color_list = read_txt(item_path + '.color')
+                param_list.expand(color_list)
+                self.labels.append(param_list)
 
     def _shuffle_lists(self):
         img_paths = self.img_paths

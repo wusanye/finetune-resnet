@@ -34,8 +34,9 @@ if __name__ == '__main__':
     image_size  = [450, 450, 3]
     output_dims = 398
     model_path  = 'pre-trained-models/resnet_v1_50.ckpt'
-    train_list  = 'list/train.list'
-    val_list    = 'list/dev.list'
+    base_dir    = 'datasets'
+    train_list  = 'train.list'
+    val_list    = 'dev.list'
     logdir      = 'train-logs'
     train_vars  = ['fc6']
     num_epochs  = 50
