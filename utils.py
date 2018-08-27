@@ -82,7 +82,9 @@ class DataGenerator(object):
                 # read y data, stored in .txt
                 param_list = read_txt(item_path + '.shape')
                 color_list = read_txt(item_path + '.color')
-                param_list.expand(color_list)
+                exp_list = read_txt(item_path + '.expression')
+                param_list.extend(color_list)
+                param_list.extend(exp_list)
                 self.labels.append(param_list)
 
     def _shuffle_lists(self):
@@ -130,13 +132,6 @@ def read_txt(file_name):
         tmp = list(map(float, line.strip('\n').strip().split(' ')))
         num_list += tmp
     return num_list
-
-
-def l2_loss(predicts, truths):
-
-    loss = tf.reduce_mean(tf.square(predicts - truths))
-
-    return loss
 
 
 def optimize_loss(train_optimizer, lr_rate, predicts, truths, summary=True):

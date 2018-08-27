@@ -5,28 +5,11 @@
 
 """This is the implementation of fine-tuning a model"""
 
-from nn_ops import dense, flatten
 import tensorflow as tf
 from collections import OrderedDict
 import tensorflow.contrib.slim as slim
-import tensorflow.contrib.slim.nets as model
-from utils import load_data_sets, l2_loss, train
-
-
-def resnet50v1(inputs, output_dims, training=True):
-
-    # transfer learning with pre-trained model
-    net, _ = model.resnet_v1.resnet_v1_50(inputs, output_dims, is_training=training)
-
-    graph = tf.get_default_graph()
-
-    avg_pool = graph.get_tensor_by_name('resnet_v1_50/pool5:0')
-    avg_pool = flatten(avg_pool)
-
-    with tf.variable_scope('resnet_v1_50/fc6'):
-        fc6 = dense(avg_pool, output_dims, activation=None)
-
-    return fc6
+from utils import load_data_sets, train
+from model import resnet50v1, my_custom_loss
 
 
 if __name__ == '__main__':
@@ -48,7 +31,7 @@ if __name__ == '__main__':
 
     predicts = resnet50v1(inputs, output_dims, training)
     with tf.name_scope('object_loss'):
-        obj_loss = l2_loss(predicts, truths)
+        obj_loss = my_custom_loss(truths, predicts)
         reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss = obj_loss + tf.add_n(reg_loss)
 
