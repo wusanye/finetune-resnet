@@ -33,7 +33,7 @@ if __name__ == '__main__':
     with tf.name_scope('object_loss'):
         obj_loss = my_custom_loss(truths, predicts)
         reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        loss = obj_loss + tf.add_n(reg_loss)
+        loss = obj_loss  # + tf.add_n(reg_loss)
 
     tf.summary.scalar('total loss', loss)
     tf.summary.scalar('obj loss', obj_loss)
@@ -59,4 +59,3 @@ if __name__ == '__main__':
 
     # begin training
     train(group_op, loss, feed_dict, data_family, num_epochs, saver, restorer, model_path)
-

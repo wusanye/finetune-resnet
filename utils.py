@@ -195,8 +195,8 @@ def train(group_op, loss, feeds, dataset, epochs, saver, logdir, restorer, model
     train_writer = tf.summary.FileWriter(logdir + '/train')
     dev_writer = tf.summary.FileWriter(logdir + '/dev')
 
-    train_batches = np.ceil(dataset.train.num_examples / dataset.train.batch_size)
-    val_batches = np.ceil(dataset.val.num_examples / dataset.val.bnatch_size)
+    train_batches = int(np.ceil(dataset.train.num_examples / dataset.train.batch_size))
+    val_batches = int(np.ceil(dataset.val.num_examples / dataset.val.batch_size))
 
     train_init_op = dataset.train.init_op
     val_init_op = dataset.val.init_op
