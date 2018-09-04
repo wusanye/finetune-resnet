@@ -14,12 +14,12 @@ from model import resnet50v1, my_custom_loss
 
 if __name__ == '__main__':
 
-    image_size  = [450, 450, 3]
+    image_size  = [224, 224, 3]
     output_dims = 398
     model_path  = 'pre-trained-models/resnet_v1_50.ckpt'
-    base_dir    = 'datasets'
+    base_dir    = '../3dReconstruction/20180820'
     train_list  = 'train.list'
-    val_list    = 'dev.list'
+    val_list    = 'test.list'
     logdir      = 'train-logs'
     train_vars  = ['fc6']
     num_epochs  = 50
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     feed_dict = OrderedDict.fromkeys([inputs, truths, training])
     group_op = tf.group(train_op)
 
-    data_family = load_data_sets(output_dims, batch_size, train_list, val_list)
+    data_family = load_data_sets(output_dims, batch_size, train_list, val_list, base_dir)
 
     # begin training
     train(group_op, loss, feed_dict, data_family, num_epochs, saver, restorer, model_path)

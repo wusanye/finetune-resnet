@@ -163,12 +163,12 @@ def optimize_loss(train_optimizer, lr_rate, predicts, truths, summary=True):
     return train_op, update_op, loss
 
 
-def load_data_sets(output_dim, batch_size, train_list, val_list):
+def load_data_sets(output_dim, batch_size, train_list, val_list, base_dir):
 
     # Place data loading and pre-processing on cpu
     with tf.device('/cpu:0'):
-        train_data = DataGenerator(train_list, output_dim, 'training', batch_size, shuffle=True)
-        val_data = DataGenerator(val_list, output_dim, 'inference', batch_size, shuffle=False)
+        train_data = DataGenerator(base_dir, train_list, output_dim, 'training', batch_size, shuffle=True)
+        val_data = DataGenerator(base_dir, val_list, output_dim, 'inference', batch_size, shuffle=False)
 
     # Create an reinitializable iterator given the data structure
     iterator = Iterator.from_structure(train_data.data.output_types, train_data.data.output_shapes)
