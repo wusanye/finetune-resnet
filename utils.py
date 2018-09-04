@@ -134,35 +134,6 @@ def read_txt(file_name):
     return num_list
 
 
-def optimize_loss(train_optimizer, lr_rate, predicts, truths, summary=True):
-
-    with tf.name_scope("Asymmetric_L2_Loss"):
-        loss = l2_loss(predicts, truths)
-        reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        loss += tf.add_n(reg_loss)
-
-    var_list = [v for v in tf.trainable_variables()]
-
-    # # optimizer.minimize
-    with tf.name_scope("train"):
-        optimizer = train_optimizer(learning_rate=lr_rate)
-        grads_and_vars = optimizer.compute_gradients(loss, var_list)
-        train_op = optimizer.apply_gradients(grads_and_vars=grads_and_vars)
-        update_op = tf.get_collection(tf.GraphKeys.UPDATE_OPS)  # batch norm update
-
-    if summary:
-        # # statistic summary
-        for var in var_list:
-            tf.summary.histogram(var.name, var)
-
-        for gradient, var in grads_and_vars:
-            tf.summary.histogram(var.name + '/gradient', gradient)
-
-    tf.summary.scalar('loss', loss)
-
-    return train_op, update_op, loss
-
-
 def load_data_sets(output_dim, batch_size, train_list, val_list, base_dir):
 
     # Place data loading and pre-processing on cpu
